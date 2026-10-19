@@ -5,7 +5,6 @@ const schema = yup.object({
   DATABASE_URL: yup.string().required(),
   CORS_ORIGIN: yup.string().required(),
   API_NINJAS_KEY: yup.string().default(""),
-  SYNC_CRON: yup.string().default("0 3 * * *"),
 });
 
 export type Config = yup.InferType<typeof schema>;

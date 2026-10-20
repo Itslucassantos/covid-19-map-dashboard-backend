@@ -11,6 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "npm run typecheck && jest",
+    "seed": "ts-node src/infrastructure/job/seed.ts",
+    "seed:prod": "node dist/infrastructure/job/seed.js",
     "migrate": "ts-node src/infrastructure/database/migrate.ts",
     "migrate:undo": "ts-node src/infrastructure/database/migrate.ts down",
     "migrate:prod": "node dist/infrastructure/database/migrate.js"

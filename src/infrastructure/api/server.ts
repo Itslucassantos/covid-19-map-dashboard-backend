@@ -1,7 +1,7 @@
 import "dotenv/config";
 import "reflect-metadata";
 import { createApp } from "./express";
-import { loadConfig } from "./config";
+import { loadConfig, parseCorsOrigins } from "./config";
 import { jsonLogger as logger } from "./logger";
 import { createModelSequelize } from "../database/sequelize";
 import CountryRepository from "../country/repository/sequelize/country.repository";
@@ -13,7 +13,7 @@ const SHUTDOWN_TIMEOUT_MS = 10_000;
 const config = loadConfig();
 const sequelize = createModelSequelize(config.DATABASE_URL);
 const app = createApp({
-  corsOrigin: config.CORS_ORIGIN,
+  corsOrigin: parseCorsOrigins(config.CORS_ORIGIN),
   logger,
   countryRepository: new CountryRepository(),
   globalStatsRepository: new GlobalStatsRepository(),
@@ -34,13 +34,11 @@ async function bootstrap() {
     shuttingDown = true;
     logger.info("shutting down", { signal });
 
-    // Force exit if open connections never drain
     setTimeout(() => {
       logger.error("shutdown timed out");
       process.exit(1);
     }, SHUTDOWN_TIMEOUT_MS).unref();
 
-    // Stop accepting connections, let in-flight requests finish, then close the database
     server.close(async (serverError) => {
       try {
         await sequelize.close();

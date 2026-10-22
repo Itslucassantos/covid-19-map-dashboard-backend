@@ -8,7 +8,6 @@ export function createSequelize(databaseUrl: string): Sequelize {
   return new Sequelize(databaseUrl, { dialect: "postgres", logging: false });
 }
 
-// Sequelize instance with the ORM models registered, for the API process.
 export function createModelSequelize(databaseUrl: string): SequelizeTypescript {
   const sequelize = new SequelizeTypescript(databaseUrl, { dialect: "postgres", logging: false });
   sequelize.addModels([CountryModel, GlobalStatsModel, DailyStatModel]);

@@ -3,7 +3,6 @@ import NotificationError from "../../@shared/notification/notification.error";
 import DailyStatValidatorFactory from "../validator/daily-stat.validator.factory";
 
 export type DailyStatProps = {
-  // null means the global scope (sum of all countries)
   countryIso2: string | null;
   date: string;
   cases: number;

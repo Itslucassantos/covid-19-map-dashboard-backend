@@ -10,6 +10,8 @@ import CovidDataGateway, {
 } from "../../../domain/sync/gateway/covid-data-gateway.interface";
 import { OutputSeedCovidDataDto } from "./seed.covid-data.dto";
 
+const nonNegative = (value: number | undefined) => Math.max(value ?? 0, 0);
+
 type Totals = Map<string, { total: number; new: number }>;
 
 type Options = {
@@ -42,6 +44,7 @@ export default class SeedCovidDataUseCase {
     const dailyStats: SeedDailyStat[] = [];
     const perCountry = new Map<string, Map<string, SeedDailyStat>>();
     const failedCountries: OutputSeedCovidDataDto["failedCountries"] = [];
+    const skippedCountries: OutputSeedCovidDataDto["skippedCountries"] = [];
 
     const total = this.options.countries.length;
     for (const [index, reference] of this.options.countries.entries()) {
@@ -52,7 +55,7 @@ export default class SeedCovidDataUseCase {
         ]);
         const days = this.mergeDays(reference.iso2, cases, deaths);
         if (days.length === 0) {
-          failedCountries.push({ iso2: reference.iso2, reason: "no data returned" });
+          skippedCountries.push({ iso2: reference.iso2, reason: "no data returned" });
         } else {
           perCountry.set(reference.iso2, new Map(days.map((day) => [day.date, day])));
           dailyStats.push(...days);
@@ -91,10 +94,10 @@ export default class SeedCovidDataUseCase {
       countriesSeeded: countries.length,
       dailyStatsSeeded: dailyStats.length,
       failedCountries,
+      skippedCountries,
     };
   }
 
-  // Queries by dataset name first, then by known aliases, until the source returns data.
   private async fetchTotals(reference: CountryReference, metric: CovidMetric): Promise<Totals> {
     const candidates = [reference.name, ...(this.options.extraAliases?.[reference.iso2] ?? [])];
     for (const candidate of candidates) {
@@ -106,7 +109,6 @@ export default class SeedCovidDataUseCase {
     return new Map();
   }
 
-  // Countries with administrative divisions come back as one series per region: sum them by date.
   private sumRegions(iso2: string, series: CovidSeries[]): Totals {
     const totals: Totals = new Map();
     for (const item of series) {
@@ -134,8 +136,8 @@ export default class SeedCovidDataUseCase {
         date,
         cases: lastCases,
         deaths: lastDeaths,
-        newCases: cases.get(date)?.new ?? 0,
-        newDeaths: deaths.get(date)?.new ?? 0,
+        newCases: nonNegative(cases.get(date)?.new),
+        newDeaths: nonNegative(deaths.get(date)?.new),
       };
     });
   }

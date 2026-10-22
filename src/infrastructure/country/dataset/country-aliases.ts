@@ -1,5 +1,3 @@
-// Names used by the upstream source (Johns Hopkins style) that differ from the dataset names.
-// Keyed by iso2; the seed also uses these as fallback `country` query values.
 const countryAliases: Record<string, string[]> = {
   US: ["US", "United States of America"],
   KR: ["Korea, South", "South Korea"],
@@ -25,6 +23,7 @@ const countryAliases: Record<string, string[]> = {
   BS: ["Bahamas, The", "The Bahamas"],
   VA: ["Holy See"],
   XK: ["Kosovo"],
+  TR: ["Turkey"],
 };
 
 export default countryAliases;

@@ -22,6 +22,12 @@ async function main() {
     );
     const output = await useCase.execute();
     log({ msg: "seed finished", ...output });
+    if (output.skippedCountries.length > 0) {
+      log({
+        msg: "countries without data in the source",
+        iso2: output.skippedCountries.map((country) => country.iso2),
+      });
+    }
     if (output.failedCountries.length > 0) process.exitCode = 1;
   } finally {
     await sequelize.close();

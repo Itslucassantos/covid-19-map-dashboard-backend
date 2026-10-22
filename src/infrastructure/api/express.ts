@@ -13,7 +13,7 @@ import { requestLogger } from "./middlewares/request-logger";
 import { Logger, silentLogger } from "./logger";
 
 export type AppOptions = {
-  corsOrigin: string;
+  corsOrigin: string | string[];
   rateLimitPerMinute?: number;
   logger?: Logger;
   countryRepository?: CountryRepositoryInterface;
@@ -21,7 +21,6 @@ export type AppOptions = {
   dailyStatRepository?: DailyStatRepositoryInterface;
 };
 
-// Short cache: the data only changes a few times a day
 const cacheControl: RequestHandler = (_req, res, next) => {
   res.setHeader("Cache-Control", "public, max-age=300");
   next();
@@ -33,7 +32,14 @@ export function createApp(options: AppOptions): Express {
   app.use(requestId);
   app.use(requestLogger(logger));
   app.use(helmet());
-  app.use(cors({ origin: options.corsOrigin }));
+  app.use(
+    cors({
+      origin: options.corsOrigin,
+      methods: ["GET", "HEAD", "OPTIONS"],
+      exposedHeaders: ["X-Request-Id", "RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset"],
+      maxAge: 600,
+    }),
+  );
   app.use(
     rateLimit({
       windowMs: 60_000,

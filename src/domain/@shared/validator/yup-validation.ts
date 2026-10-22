@@ -1,7 +1,6 @@
 import * as yup from "yup";
 import Entity from "../entity/entity.abstract";
 
-// Runs a yup schema and reports every failure on the entity's notification.
 export function validateWithYup(
   entity: Entity,
   context: string,

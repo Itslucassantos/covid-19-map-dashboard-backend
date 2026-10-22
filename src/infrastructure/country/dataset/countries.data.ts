@@ -1,5 +1,3 @@
-// Static reference dataset. Sources: mledoze/countries (ISO codes, names, coordinates) and
-// World Bank SP.POP.TOTL (latest population available for 2019-2024; TW, XK and VA filled manually).
 import { CountryReference } from "../../../domain/country/country-reference";
 
 const countries: CountryReference[] = [

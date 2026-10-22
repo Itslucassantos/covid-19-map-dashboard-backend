@@ -4,7 +4,6 @@ import CountryRepositoryInterface from "../../../../domain/country/repository/co
 import CovidStats from "../../../../domain/country/value-object/covid-stats";
 import CountryModel from "./country.model";
 
-// BIGINT columns come back as strings from PostgreSQL
 const toNumber = (value: number | string | null): number | null =>
   value === null || value === undefined ? null : Number(value);
 

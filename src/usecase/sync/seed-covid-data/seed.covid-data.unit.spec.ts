@@ -79,7 +79,8 @@ describe("SeedCovidDataUseCase unit test", () => {
     const output = await useCase.execute();
 
     expect(output.countriesSeeded).toBe(2);
-    expect(output.failedCountries).toEqual([{ iso2: "AQ", reason: "no data returned" }]);
+    expect(output.failedCountries).toEqual([]);
+    expect(output.skippedCountries).toEqual([{ iso2: "AQ", reason: "no data returned" }]);
 
     const canada = saved!.countries.find((c) => c.iso2 === "CA")!;
     expect(canada).toMatchObject({ cases: 30, todayCases: 15, deaths: 3 });
@@ -88,5 +89,36 @@ describe("SeedCovidDataUseCase unit test", () => {
     expect(saved!.global).toMatchObject({ cases: 180, todayCases: 65, affectedCountries: 2 });
     const globalDays = saved!.dailyStats.filter((d) => d.countryIso2 === null);
     expect(globalDays.map((d) => d.cases)).toEqual([115, 180]);
+  });
+
+  it("counts negative corrections from the source as zero new cases", async () => {
+    let saved: SeedData | undefined;
+    const gateway: CovidDataGateway = {
+      fetchSeries: async (country, metric) =>
+        country === "Brazil" && metric === "cases"
+          ? [
+              {
+                country: "Brazil",
+                region: null,
+                points: [
+                  { date: "2023-01-01", total: 100, new: 100 },
+                  { date: "2023-01-02", total: 90, new: -10 },
+                  { date: "2023-01-03", total: 120, new: 30 },
+                ],
+              },
+            ]
+          : [],
+    };
+    const useCase = new SeedCovidDataUseCase(
+      gateway,
+      { save: async (data) => void (saved = data) },
+      { countries, pauseMs: 0, sleep: async () => undefined },
+    );
+
+    await useCase.execute();
+
+    const brazil = saved!.dailyStats.filter((d) => d.countryIso2 === "BR");
+    expect(brazil.map((d) => d.newCases)).toEqual([100, 0, 30]);
+    expect(brazil.map((d) => d.cases)).toEqual([100, 90, 120]);
   });
 });

@@ -25,7 +25,6 @@ const schema = yup.object({
     deaths: count,
     recovered: optionalCount,
     active: optionalCount,
-    // Daily deltas may be negative when the source corrects earlier numbers.
     todayCases: yup.number().integer().required(),
     todayDeaths: yup.number().integer().required(),
     casesPerMillion: optionalRatio,

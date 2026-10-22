@@ -6,7 +6,6 @@ export default class CountryFactory {
     return new Country(props);
   }
 
-  // Builds a country from cumulative totals, deriving the per-million figures from its population.
   static createWithTotals(
     props: Omit<CountryProps, "stats">,
     totals: {

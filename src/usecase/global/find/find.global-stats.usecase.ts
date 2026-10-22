@@ -5,7 +5,6 @@ import { OutputFindGlobalStatsDto } from "./find.global-stats.dto";
 export default class FindGlobalStatsUseCase {
   constructor(private readonly globalStatsRepository: GlobalStatsRepositoryInterface) {}
 
-  // Before the first sync there is no row yet, so the totals are reported as zero.
   async execute(): Promise<OutputFindGlobalStatsDto> {
     const global = await this.globalStatsRepository.find();
     const stats = global?.stats ?? CovidStats.empty();

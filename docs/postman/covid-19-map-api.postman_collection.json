@@ -1,0 +1,729 @@
+{
+  "info": {
+    "name": "COVID-19 Map API",
+    "description": "Manual test cases for the COVID-19 Map Dashboard API. Run `npm run migrate`, `npm run seed` and `npm run dev` first. The rate limit (120 requests/minute per IP) can be exercised by running the 'Health' request 130 times in the Collection Runner without delay.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Endpoints",
+      "item": [
+        {
+          "name": "01 Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"status ok\", () => pm.expect(pm.response.json()).to.eql({ status: \"ok\" }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "02 Global totals",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"has cache header\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"public, max-age=300\"));",
+                  "pm.test(\"global shape\", () => {",
+                  "  const b = pm.response.json();",
+                  "  [\"cases\",\"deaths\",\"todayCases\",\"todayDeaths\",\"affectedCountries\"].forEach((k) => pm.expect(b[k]).to.be.a(\"number\"));",
+                  "  pm.expect(b.recovered).to.eql(null);",
+                  "  pm.expect(b.active).to.eql(null);",
+                  "  pm.expect(b.updatedAt).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/global",
+              "host": ["{{baseUrl}}"],
+              "path": ["global"]
+            }
+          }
+        },
+        {
+          "name": "03 Global history (default 30)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"has cache header\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"public, max-age=300\"));",
+                  "pm.test(\"history is valid\", () => {",
+                  "  const { history } = pm.response.json();",
+                  "  pm.expect(history.length).to.be.within(1, 30);",
+                  "  history.forEach((p) => {",
+                  "    [\"date\",\"cases\",\"deaths\",\"newCases\",\"newDeaths\"].forEach((k) => pm.expect(p).to.have.property(k));",
+                  "    pm.expect(p.newCases).to.be.at.least(0);",
+                  "    pm.expect(p.newDeaths).to.be.at.least(0);",
+                  "  });",
+                  "  const dates = history.map((p) => p.date);",
+                  "  pm.expect(dates).to.eql([...dates].sort());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/global/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["global", "history"]
+            }
+          }
+        },
+        {
+          "name": "04 Global history 365 days",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"has cache header\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"public, max-age=300\"));",
+                  "pm.test(\"history is valid\", () => {",
+                  "  const { history } = pm.response.json();",
+                  "  pm.expect(history.length).to.be.within(1, 365);",
+                  "  history.forEach((p) => {",
+                  "    [\"date\",\"cases\",\"deaths\",\"newCases\",\"newDeaths\"].forEach((k) => pm.expect(p).to.have.property(k));",
+                  "    pm.expect(p.newCases).to.be.at.least(0);",
+                  "    pm.expect(p.newDeaths).to.be.at.least(0);",
+                  "  });",
+                  "  const dates = history.map((p) => p.date);",
+                  "  pm.expect(dates).to.eql([...dates].sort());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/global/history?days=365",
+              "host": ["{{baseUrl}}"],
+              "path": ["global", "history"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "365"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 List countries",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"has cache header\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"public, max-age=300\"));",
+                  "pm.test(\"countries list\", () => {",
+                  "  const { countries } = pm.response.json();",
+                  "  pm.expect(countries).to.be.an(\"array\").that.is.not.empty;",
+                  "  [\"iso2\",\"name\",\"lat\",\"lng\",\"cases\",\"deaths\",\"casesPerMillion\"].forEach((k) => pm.expect(countries[0]).to.have.property(k));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries"]
+            }
+          }
+        },
+        {
+          "name": "06 Country BR",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"has cache header\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"public, max-age=300\"));",
+                  "pm.test(\"returns Brazil\", () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.iso2).to.eql(\"BR\");",
+                  "  pm.expect(body.name).to.eql(\"Brazil\");",
+                  "  pm.expect(body.cases).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/BR",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "BR"]
+            }
+          }
+        },
+        {
+          "name": "07 Country br (case-insensitive)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"has cache header\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"public, max-age=300\"));",
+                  "pm.test(\"returns Brazil\", () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.iso2).to.eql(\"BR\");",
+                  "  pm.expect(body.name).to.eql(\"Brazil\");",
+                  "  pm.expect(body.cases).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/br",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "br"]
+            }
+          }
+        },
+        {
+          "name": "08 Country BR history 7 days",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"has cache header\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"public, max-age=300\"));",
+                  "pm.test(\"iso2 is BR\", () => pm.expect(pm.response.json().iso2).to.eql(\"BR\"));",
+                  "pm.test(\"history is valid\", () => {",
+                  "  const { history } = pm.response.json();",
+                  "  pm.expect(history.length).to.be.within(1, 7);",
+                  "  history.forEach((p) => {",
+                  "    [\"date\",\"cases\",\"deaths\",\"newCases\",\"newDeaths\"].forEach((k) => pm.expect(p).to.have.property(k));",
+                  "    pm.expect(p.newCases).to.be.at.least(0);",
+                  "    pm.expect(p.newDeaths).to.be.at.least(0);",
+                  "  });",
+                  "  const dates = history.map((p) => p.date);",
+                  "  pm.expect(dates).to.eql([...dates].sort());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/BR/history?days=7",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "BR", "history"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "09 Country not found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"COUNTRY_NOT_FOUND\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/ZZ",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "ZZ"]
+            }
+          }
+        },
+        {
+          "name": "10 Country history not found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"COUNTRY_NOT_FOUND\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/ZZ/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "ZZ", "history"]
+            }
+          }
+        },
+        {
+          "name": "11 iso2 with 3 letters",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"VALIDATION_ERROR\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/BRA",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "BRA"]
+            }
+          }
+        },
+        {
+          "name": "12 iso2 with a digit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"VALIDATION_ERROR\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/B1",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "B1"]
+            }
+          }
+        },
+        {
+          "name": "13 days=0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"VALIDATION_ERROR\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/BR/history?days=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "BR", "history"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "14 days=366",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"VALIDATION_ERROR\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/BR/history?days=366",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "BR", "history"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "366"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "15 days=abc",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"VALIDATION_ERROR\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries/BR/history?days=abc",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries", "BR", "history"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "abc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "16 global days=-1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"VALIDATION_ERROR\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/global/history?days=-1",
+              "host": ["{{baseUrl}}"],
+              "path": ["global", "history"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "-1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "17 Unknown route",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"NOT_FOUND\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/unknown",
+              "host": ["{{baseUrl}}"],
+              "path": ["unknown"]
+            }
+          }
+        },
+        {
+          "name": "18 POST is not allowed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"returns the stable error envelope\", () => {",
+                  "  const { error } = pm.response.json();",
+                  "  pm.expect(error.code).to.eql(\"NOT_FOUND\");",
+                  "  pm.expect(error.requestId).to.eql(pm.response.headers.get(\"X-Request-Id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/countries",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cross-cutting checks",
+      "item": [
+        {
+          "name": "21 Helmet headers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"helmet headers\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"X-Content-Type-Options\")).to.eql(\"nosniff\");",
+                  "  pm.expect(pm.response.headers.get(\"Strict-Transport-Security\")).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "22a CORS allowed origin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"origin allowed\", () => pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(pm.collectionVariables.get(\"corsOrigin\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{corsOrigin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/countries",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries"]
+            }
+          }
+        },
+        {
+          "name": "22b CORS blocked origin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"origin not allowed\", () => pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(undefined));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "http://evil.example"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/countries",
+              "host": ["{{baseUrl}}"],
+              "path": ["countries"]
+            }
+          }
+        },
+        {
+          "name": "23 Rate limit headers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+                  "pm.test(\"rate limit headers\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"RateLimit-Limit\")).to.eql(\"120\");",
+                  "  pm.expect(pm.response.headers.get(\"RateLimit-Remaining\")).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3333/api"
+    },
+    {
+      "key": "corsOrigin",
+      "value": "http://localhost:5173"
+    }
+  ]
+}

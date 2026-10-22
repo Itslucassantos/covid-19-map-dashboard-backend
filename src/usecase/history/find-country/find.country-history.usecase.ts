@@ -13,7 +13,6 @@ export default class FindCountryHistoryUseCase {
   ) {}
 
   async execute(input: InputFindCountryHistoryDto): Promise<OutputFindCountryHistoryDto> {
-    // Fails with CountryNotFoundError for unknown countries instead of returning an empty series
     const country = await this.countryRepository.find(input.iso2);
     const stats = await this.dailyStatRepository.findLast(country.iso2, input.days);
     return { iso2: country.iso2, history: stats.map(toHistoryPoint) };

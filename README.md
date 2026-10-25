@@ -4,6 +4,8 @@ REST API that stores COVID-19 data for every country and serves it to an interac
 
 > **Frontend repository:** [covid-19-map-dashboard-front-end](https://github.com/Itslucassantos/covid-19-map-dashboard-front-end)
 
+> **Project video:** [Watch the demo on Google Drive](https://drive.google.com/file/d/1ivxAJFSLdCYf5vN8-E1i2BlGt-Rjezah/view?usp=drive_link)
+
 The backend and the frontend are independent projects. The frontend never talks to the external COVID-19 data source: it only consumes this API.
 
 ## Table of contents

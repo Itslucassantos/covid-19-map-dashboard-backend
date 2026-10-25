@@ -1,0 +1,53 @@
+{
+  "name": "covid-19-map-dashboard-backend",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/infrastructure/api/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/infrastructure/api/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "npm run typecheck && jest",
+    "seed": "ts-node src/infrastructure/job/seed.ts",
+    "seed:prod": "node dist/infrastructure/job/seed.js",
+    "migrate": "ts-node src/infrastructure/database/migrate.ts",
+    "migrate:undo": "ts-node src/infrastructure/database/migrate.ts down",
+    "migrate:prod": "node dist/infrastructure/database/migrate.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "sequelize": "^6.37.8",
+    "sequelize-typescript": "^2.1.6",
+    "umzug": "^3.8.3",
+    "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@swc/core": "^1.16.18",
+    "@swc/jest": "^0.2.39",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^26.6.5",
+    "@types/supertest": "^7.2.1",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jest": "^30.5.2",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.10",
+    "sqlite3": "^6.0.1",
+    "supertest": "^7.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2"
+  }
+}
